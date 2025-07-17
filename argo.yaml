@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      steps:
+        - setWeight: 50
+        - pause: { duration: 30s }
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app
+          image: 491085387726.dkr.ecr.ap-south-1.amazonaws.com/my-static-site:latest
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app
+spec:
+  selector:
+    app: my-app
+  ports:
+    - port: 80
+      targetPort: 80
+  type: NodePort  # or use "ClusterIP" if you're exposing via Ingress/ALB
+
